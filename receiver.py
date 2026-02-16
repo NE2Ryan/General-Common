@@ -7,7 +7,7 @@ import logging
 import datetime
 
 # --- Configuration ---
-RECEIVER_IP = "192.168.12.40"
+RECEIVER_IP = "192.168.1.2"
 RECEIVER_PORT = 5005
 PACKET_SIZE = 1024
 LOG_FILE = "receiver.log"

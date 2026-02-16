@@ -9,7 +9,7 @@ import random
 import csv
 
 # --- Configuration ---
-RECEIVER_IP = "192.168.12.40"
+RECEIVER_IP = "192.168.1.2"
 RECEIVER_PORT = 5005
 SEND_INTERVAL_SECONDS = 1
 LOG_FILE = "sender.log"
