@@ -40,11 +40,25 @@ def main():
 
     # Send termination signal
     try:
-        os.kill(pid, signal.SIGTERM)
+        if sys.platform == "win32":
+            # Gracefully terminate on Windows
+            subprocess.run(f"taskkill /PID {pid}", shell=True, check=True)
+        else:
+            # Gracefully terminate on Unix-like systems
+            os.kill(pid, signal.SIGTERM)
         print("Termination signal sent. Waiting for process to exit...")
     except ProcessLookupError:
+        # This exception is for os.kill, taskkill will raise CalledProcessError
         print(f"Warning: Process with PID {pid} not found. It may have already stopped.")
-        os.remove(PID_FILE)
+        if os.path.exists(PID_FILE):
+            os.remove(PID_FILE)
+        print(f"Cleaned up stale PID file '{PID_FILE}'.")
+        sys.exit(0)
+    except (subprocess.CalledProcessError, OSError) as e:
+        # Catch errors if the process is already gone
+        print(f"Warning: Process with PID {pid} not found during termination signal. It may have already stopped.")
+        if os.path.exists(PID_FILE):
+            os.remove(PID_FILE)
         print(f"Cleaned up stale PID file '{PID_FILE}'.")
         sys.exit(0)
     except Exception as e:
