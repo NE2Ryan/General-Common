@@ -4,12 +4,12 @@ import os
 import sys
 import signal
 import logging
+import datetime
 
 # --- Configuration ---
 RECEIVER_IP = "192.168.12.40"
 RECEIVER_PORT = 5005
 PACKET_SIZE = 1024
-CSV_FILENAME = "received_packets.csv"
 LOG_FILE = "receiver.log"
 PID_FILE = "receiver.pid"
 
@@ -28,6 +28,11 @@ def main():
     setup_logging()
     logging.info("Receiver process started.")
 
+    # Generate a unique CSV filename with a timestamp
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    csv_filename = f"received_packets_{timestamp}.csv"
+    logging.info(f"Logging received packets to {csv_filename}")
+
     # Store PID
     with open(PID_FILE, 'w') as f:
         f.write(str(os.getpid()))
@@ -37,7 +42,7 @@ def main():
     
     logging.info(f"Receiver listening on {RECEIVER_IP}:{RECEIVER_PORT}")
 
-    file_exists = os.path.isfile(CSV_FILENAME)
+    file_exists = os.path.isfile(csv_filename)
     
     def shutdown_handler(signum, frame):
         logging.info("Shutdown signal received. Stopping receiver.")
@@ -51,7 +56,7 @@ def main():
     signal.signal(signal.SIGTERM, shutdown_handler)
 
     try:
-        with open(CSV_FILENAME, 'a', newline='') as csvfile:
+        with open(csv_filename, 'a', newline='') as csvfile:
             csv_writer = csv.writer(csvfile)
             
             if not file_exists:
