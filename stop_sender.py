@@ -41,28 +41,29 @@ def main():
     # Send termination signal
     try:
         if sys.platform == "win32":
-            # Gracefully terminate on Windows
-            subprocess.run(f"taskkill /PID {pid}", shell=True, check=True)
+            # Attempt to gracefully terminate on Windows. This sends a WM_CLOSE message.
+            # The python script is unlikely to catch it, but it's the "polite" way.
+            # We suppress the output and ignore errors, as it will likely tell us to use /F.
+            subprocess.run(f"taskkill /PID {pid}", shell=True, capture_output=True)
         else:
             # Gracefully terminate on Unix-like systems
             os.kill(pid, signal.SIGTERM)
         print("Termination signal sent. Waiting for process to exit...")
     except ProcessLookupError:
-        # This exception is for os.kill, taskkill will raise CalledProcessError
         print(f"Warning: Process with PID {pid} not found. It may have already stopped.")
         if os.path.exists(PID_FILE):
             os.remove(PID_FILE)
         print(f"Cleaned up stale PID file '{PID_FILE}'.")
         sys.exit(0)
-    except (subprocess.CalledProcessError, OSError) as e:
-        # Catch errors if the process is already gone
-        print(f"Warning: Process with PID {pid} not found during termination signal. It may have already stopped.")
+    except OSError as e:
+        # Catch other OS-level errors, e.g., if the process is already gone on Unix
+        print(f"Warning: OS error during termination signal (process may be gone): {e}")
         if os.path.exists(PID_FILE):
             os.remove(PID_FILE)
         print(f"Cleaned up stale PID file '{PID_FILE}'.")
         sys.exit(0)
     except Exception as e:
-        print(f"Error sending termination signal: {e}")
+        print(f"An unexpected error occurred while sending termination signal: {e}")
         sys.exit(1)
 
     # Wait for the process to terminate
